@@ -9,7 +9,7 @@ namespace ReceptiDeWebAPI.Services.Recipes
 
         public RecipeService(AppDbContext context)
         {
-            _context = context; 
+            _context = context;
         }
 
         public List<Recipe> AddRecipe(RecipeModel request)
@@ -18,13 +18,22 @@ namespace ReceptiDeWebAPI.Services.Recipes
             {
                 Title = request.Title,
                 Method = request.Method,
-                CreatorId = request.CreatorId,
                 PictureUrl = request.PictureUrl,
                 VideoUrl = request.VideoUrl,
                 CookTime = int.Parse(request.CookTime),
                 Serves = int.Parse(request.Serves),
                 IsDeleted = request.IsDeleted,
             };
+
+            var existUser = _context.Users.FirstOrDefault(x => x.Id == int.Parse(request.CreatorId));
+            if (existUser == null)
+            {
+                recipe.User = new User { Id = int.Parse(request.CreatorId) };
+            }
+            else
+            {
+                recipe.User = existUser;
+            }
 
             var existCategory = _context.Categories.FirstOrDefault(x => x.Name == request.Category);
             if (existCategory == null)
@@ -58,13 +67,13 @@ namespace ReceptiDeWebAPI.Services.Recipes
 
         }
 
-        public List<Recipe> UpdateRecipe(int id,RecipeModel request)
+        public List<Recipe> UpdateRecipe(int id, RecipeModel request)
         {
-            var recipeForUpdate =  _context.Recipes.Find(id);
+            var recipeForUpdate = _context.Recipes.Find(id);
 
             recipeForUpdate.Title = request.Title;
             recipeForUpdate.Method = request.Method;
-            recipeForUpdate.CreatorId = request.CreatorId;
+            recipeForUpdate.User.Id = int.Parse(request.CreatorId);
             recipeForUpdate.PictureUrl = request.PictureUrl;
             recipeForUpdate.VideoUrl = request.VideoUrl;
             recipeForUpdate.CookTime = int.Parse(request.CookTime);
@@ -83,7 +92,7 @@ namespace ReceptiDeWebAPI.Services.Recipes
 
             foreach (var ingredient in request.Ingredients)
             {
-                var existingredient =  _context.Ingredients.FirstOrDefault(x => x.Name == ingredient.Name);
+                var existingredient = _context.Ingredients.FirstOrDefault(x => x.Name == ingredient.Name);
                 if (existingredient == null)
                 {
                     recipeForUpdate.Ingredients.Add(new Ingredient
@@ -94,7 +103,7 @@ namespace ReceptiDeWebAPI.Services.Recipes
                 }
                 else
                 {
-                   recipeForUpdate.Ingredients.Add(existingredient);
+                    recipeForUpdate.Ingredients.Add(existingredient);
                 }
             }
 

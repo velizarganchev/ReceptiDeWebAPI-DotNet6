@@ -24,7 +24,7 @@ namespace ReceptiDeWebAPI.Data.Model
 
         public bool IsDeleted { get; set; }
 
-        public string CreatorId { get; set; } = String.Empty;
+        public User User { get; set; }
 
         public ICollection<Ingredient> Ingredients { get; set; } = new HashSet<Ingredient>();
 

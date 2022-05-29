@@ -2,6 +2,8 @@ global using ReceptiDeWebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using ReceptiDeWebAPI.Services.Categoies;
 using ReceptiDeWebAPI.Services.Recipes;
+using ReceptiDeWebAPI.Services.Users;
+using ReceptiDeWebAPI.Services.Users.Hasher;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,8 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddTransient<IHasher, Hasher>();
+builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IRecipeservice, RecipeService>();
 builder.Services.AddTransient<ICategoryService, CategoryService>();
 
