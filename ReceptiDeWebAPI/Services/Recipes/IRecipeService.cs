@@ -1,15 +1,14 @@
-﻿using ReceptiDeWebAPI.Data.Model;
-using ReceptiDeWebAPI.Models.Recipe;
+﻿using ReceptiDeWebAPI.Models.Recipe;
 
 namespace ReceptiDeWebAPI.Services.Recipes
 {
     public interface IRecipeservice
     {
-        public List<Recipe> GetAllRecipes();
-        public Recipe? GetRecipe(int id);
-        public List<Recipe> AddRecipe(RecipeModel recipe); 
-        public List<Recipe> UpdateRecipe(int id,RecipeModel recipe);
-        public List<Recipe> DeleteRecipe(int id);
+        public Task<ServiceResponse<List<GetRecipeModel>>> GetAllRecipes();
+        public Task<ServiceResponse<GetRecipeModel>> GetRecipe(int id);
+        public Task<ServiceResponse<List<GetRecipeModel>>> AddRecipe(AddRecipeModel recipe); 
+        public Task<ServiceResponse<List<GetRecipeModel>>> UpdateRecipe(int id, UpdateRecipeModel recipe);
+        public Task<ServiceResponse<List<GetRecipeModel>>> DeleteRecipe(int id);
 
 
     }

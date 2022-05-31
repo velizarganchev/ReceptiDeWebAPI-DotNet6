@@ -1,13 +1,12 @@
 ﻿namespace ReceptiDeWebAPI.Models.Recipe
 {
-    public class RecipeModel
+    public class AddRecipeModel
     {
-        // ADD VALIDATION !!!!!!!!!!!!
         public string Title { get; set; } = String.Empty;
 
         public string Method { get; set; } = String.Empty;
 
-        public string Category { get; set; } = String.Empty;
+        public CategoryModel Category { get; set; }
 
         public string CookTime { get; set; } = String.Empty;
 
@@ -19,7 +18,7 @@
 
         public bool IsDeleted { get; set; }
 
-        public string CreatorId { get; set; } = String.Empty;
+        public CreatorModel User { get; set; }
 
         public List<IngredientModel> Ingredients { get; set; } = new List<IngredientModel>();
     }

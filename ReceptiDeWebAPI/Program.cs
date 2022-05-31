@@ -16,10 +16,11 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddTransient<IHasher, Hasher>();
-builder.Services.AddTransient<IUserService, UserService>();
-builder.Services.AddTransient<IRecipeservice, RecipeService>();
-builder.Services.AddTransient<ICategoryService, CategoryService>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRecipeservice, RecipeService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

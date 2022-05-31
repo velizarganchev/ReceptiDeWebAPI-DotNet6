@@ -22,7 +22,7 @@ namespace ReceptiDeWebAPI.Data.Model
 
         public string VideoUrl { get; set; } = String.Empty;
 
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
         public User User { get; set; }
 

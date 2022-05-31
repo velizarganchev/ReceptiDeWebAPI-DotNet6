@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ReceptiDeWebAPI.Data.Model;
 using ReceptiDeWebAPI.Models.Recipe;
+using ReceptiDeWebAPI.Services;
 using ReceptiDeWebAPI.Services.Recipes;
 
 namespace ReceptiDeWebAPI.Controllers
@@ -17,63 +18,48 @@ namespace ReceptiDeWebAPI.Controllers
         }
 
         [HttpGet("getAll")]
-        public ActionResult<List<Recipe>> Get()
+        public async Task<ActionResult<ServiceResponse<List<GetRecipeModel>>>> Get()
         {
-            var recipes = _recipeService.GetAllRecipes();
+            var recipes = await _recipeService.GetAllRecipes();
             if (recipes == null)
-            {
                 return BadRequest("No Recipes in database.");
-            }
-            return _recipeService.GetAllRecipes();
+
+            return await _recipeService.GetAllRecipes();
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Recipe> Get(int id)
+        public async Task<ActionResult<ServiceResponse<GetRecipeModel>>> Get(int id)
         {
-            var recipe = _recipeService.GetRecipe(id);
-            if (recipe == null)
+            var recipe = await _recipeService.GetRecipe(id);
+            if (recipe.Data == null)
                 return BadRequest("Recipe not found.");
 
             return Ok(recipe);
         }
 
         [HttpPost("addRecipe")]
-        public ActionResult<List<Recipe>> AddRecipe(RecipeModel request)
+        public async Task<ActionResult<ServiceResponse<List<GetRecipeModel>>>> AddRecipe(AddRecipeModel request)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return BadRequest("Model is not correct!");
-            }
-
-            var recipes = _recipeService.AddRecipe(request);
+            var recipes = await _recipeService.AddRecipe(request);
             if (recipes == null)
-            {
                 return BadRequest("No Recipes in database.");
-            }
             return Ok(recipes);
         }
 
         [Route("updateRecipe/{id:int}")]
         [HttpPut]
-        public ActionResult<List<Recipe>> updateRecipe(int id, RecipeModel request)
+        public async Task<ActionResult<ServiceResponse<List<GetRecipeModel>>>> updateRecipe(int id, UpdateRecipeModel request)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return BadRequest("Model is not correct!");
-            }
-
-            var recipes = _recipeService.UpdateRecipe(id, request);
+            var recipes = await _recipeService.UpdateRecipe(id, request);
             if (recipes == null)
-            {
                 return BadRequest("No Recipes in database.");
-            }
             return Ok(recipes);
         }
 
         [HttpDelete("deleteRecipe/{id:int}")]
-        public ActionResult<List<Recipe>> Delete(int id)
+        public async Task<ActionResult<ServiceResponse<List<GetRecipeModel>>>> Delete(int id)
         {
-            var recipes = _recipeService.DeleteRecipe(id);
+            var recipes = await _recipeService.DeleteRecipe(id);
             if (recipes == null)
                 return BadRequest("No Recipes in database.");
 

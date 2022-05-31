@@ -1,11 +1,12 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using ReceptiDeWebAPI.Data.Model;
-using ReceptiDeWebAPI.Models.User;
-using ReceptiDeWebAPI.Services.Users.Hasher;
-using ReceptiDeWebAPI.Services.Users.Models;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+using ReceptiDeWebAPI.Data.Model;
+using ReceptiDeWebAPI.Models.User;
+using ReceptiDeWebAPI.Services.Users.Models;
 
 namespace ReceptiDeWebAPI.Services.Users
 {
@@ -13,13 +14,96 @@ namespace ReceptiDeWebAPI.Services.Users
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly IHasher _hasher;
 
-        public UserService(AppDbContext context, IConfiguration configuration, IHasher hasher)
+        public UserService(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
-            _hasher = hasher;
+        }
+
+
+        public User GetUser(UserRegisterModel request)
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Username == request.Username);
+            return user;
+        }
+
+        public async Task<ServiceResponse<int>> Register(User user, string password)
+        {
+            var serviceResponse = new ServiceResponse<int>();
+
+            if (await UserExist(user.Username))
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = "User already exists";
+                return serviceResponse;
+            }
+
+            CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
+            user.PasswordHash = passwordHash;
+            user.PasswordSalt = passwordSalt;
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            serviceResponse.Data = user.Id;
+
+            return serviceResponse;
+        }
+        public async Task<ServiceResponse<string>> Login(string username, string password)
+        {
+            var serviceResponse = new ServiceResponse<string>();
+            var user = await
+                _context.Users.FirstOrDefaultAsync(x => x.Username.ToLower().Equals(username.ToLower()));
+            if (user == null)
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = "User not found.";
+            }
+            else if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = "Wrong password";
+            }
+            else
+            {
+                serviceResponse.Data = user.Id.ToString();
+            }
+
+        }
+
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
+        }
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+
+                for (int i = 0; i < computedHash.Length; i++)
+                {
+                    if (computedHash[i] != passwordHash[i])
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        public void SetRefreshToken(User user, RefreshToken refreshToken)
+        {
+            user.RefreshToken = refreshToken.Token;
+            user.TokenCreated = refreshToken.Created;
+            user.TokenExpires = refreshToken.Expires;
+
+            _context.SaveChanges();
         }
 
         public RefreshToken GenerateRefreshToken()
@@ -32,7 +116,7 @@ namespace ReceptiDeWebAPI.Services.Users
             };
 
             return refreshToken;
-        }      
+        }
         public string CreateToken(User user)
         {
             List<Claim> claims = new List<Claim>
@@ -57,37 +141,13 @@ namespace ReceptiDeWebAPI.Services.Users
         }
 
 
-        public User GetUser(UserModel request)
+        public async Task<bool> UserExist(string username)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Username == request.Username);
-            return user;
-        }
-
-        public User Register(UserModel request)
-        {
-            _hasher.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
-            var user = new User
+            if (await _context.Users.AnyAsync(x => x.Username.ToLower().Equals(username.ToLower())))
             {
-                Username = request.Username,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt,
-            };
-            _context.Users.Add(user);
-            _context.SaveChanges();
-            return user;
-        }
-
-        public bool VerifyPassword(UserModel request, User user)
-            => _hasher.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt);
-
-        public void SetRefreshToken(User user, RefreshToken refreshToken)
-        {
-            user.RefreshToken = refreshToken.Token;
-            user.TokenCreated = refreshToken.Created;
-            user.TokenExpires = refreshToken.Expires;
-
-            _context.SaveChanges();
+                return true;
+            }
+            return false;
         }
     }
 }
