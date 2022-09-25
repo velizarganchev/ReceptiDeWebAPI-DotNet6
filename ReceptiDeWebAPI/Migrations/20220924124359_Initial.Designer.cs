@@ -12,8 +12,8 @@ using ReceptiDeWebAPI.Data;
 namespace ReceptiDeWebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220529144536_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20220924124359_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

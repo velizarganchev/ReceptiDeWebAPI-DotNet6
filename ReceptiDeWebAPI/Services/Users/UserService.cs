@@ -70,6 +70,7 @@ namespace ReceptiDeWebAPI.Services.Users
                 serviceResponse.Data = user.Id.ToString();
             }
 
+            return serviceResponse;
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)

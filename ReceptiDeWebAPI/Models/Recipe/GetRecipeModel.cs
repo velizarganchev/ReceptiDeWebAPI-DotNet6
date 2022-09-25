@@ -2,6 +2,7 @@
 {
     public class GetRecipeModel
     {
+        public int Id { get; set; }
         public string Title { get; set; } = String.Empty;
 
         public string Method { get; set; } = String.Empty;
