@@ -22,24 +22,29 @@ namespace ReceptiDeWebAPI.Services.Users
         }
 
 
-        public User GetUser(UserRegisterModel request)
+        public  User GetUser(string email)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Username == request.Username);
+            var user = _context.Users.FirstOrDefault(x => x.Email.ToLower().Equals(email.ToLower()));
             return user;
         }
 
-        public async Task<ServiceResponse<int>> Register(User user, string password)
+        public async Task<ServiceResponse<int>> Register(UserRegisterLoginModel model)
         {
             var serviceResponse = new ServiceResponse<int>();
+            var user = await UserExist(model.Email);
 
-            if (await UserExist(user.Username))
+            if (user != null)
             {
                 serviceResponse.Success = false;
                 serviceResponse.Message = "User already exists";
                 return serviceResponse;
             }
+            user = new User
+            {
+                Email = model.Email,
+            };
 
-            CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
+            CreatePasswordHash(model.Password, out byte[] passwordHash, out byte[] passwordSalt);
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
@@ -50,24 +55,24 @@ namespace ReceptiDeWebAPI.Services.Users
 
             return serviceResponse;
         }
-        public async Task<ServiceResponse<string>> Login(string username, string password)
+        public async Task<ServiceResponse<string>> Login(UserRegisterLoginModel model)
         {
             var serviceResponse = new ServiceResponse<string>();
-            var user = await
-                _context.Users.FirstOrDefaultAsync(x => x.Username.ToLower().Equals(username.ToLower()));
+            var user = await UserExist(model.Email);
+
             if (user == null)
             {
                 serviceResponse.Success = false;
                 serviceResponse.Message = "User not found.";
             }
-            else if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            else if (!VerifyPasswordHash(model.Password, user.PasswordHash, user.PasswordSalt))
             {
                 serviceResponse.Success = false;
                 serviceResponse.Message = "Wrong password";
             }
             else
             {
-                serviceResponse.Data = user.Id.ToString();
+                serviceResponse.Data = CreateToken(user);
             }
 
             return serviceResponse;
@@ -122,8 +127,7 @@ namespace ReceptiDeWebAPI.Services.Users
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Name, user.Email)
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
@@ -142,13 +146,14 @@ namespace ReceptiDeWebAPI.Services.Users
         }
 
 
-        public async Task<bool> UserExist(string username)
+        public async Task<User> UserExist(string email)
         {
-            if (await _context.Users.AnyAsync(x => x.Username.ToLower().Equals(username.ToLower())))
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower().Equals(email.ToLower()));
+            if (user != null)
             {
-                return true;
+                return user;
             }
-            return false;
+            return null;
         }
     }
 }

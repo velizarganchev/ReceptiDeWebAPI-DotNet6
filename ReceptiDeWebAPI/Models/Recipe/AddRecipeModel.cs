@@ -16,7 +16,7 @@
 
         public string VideoUrl { get; set; } = String.Empty;
 
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
         public CreatorModel User { get; set; }
 

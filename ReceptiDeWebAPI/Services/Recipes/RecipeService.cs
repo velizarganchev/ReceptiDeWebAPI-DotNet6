@@ -155,6 +155,7 @@ namespace ReceptiDeWebAPI.Services.Recipes
                 .Include(x => x.Category)
                 .Include(x => x.User)
                 .Include(x => x.Ingredients)
+                .Where(x => x.IsDeleted == false)
                 .ToListAsync();
             serviceResponse.Data = dbRecipes.Select(r => _mapper.Map<GetRecipeModel>(r)).ToList();
 
@@ -169,7 +170,7 @@ namespace ReceptiDeWebAPI.Services.Recipes
                  .Include(x => x.Category)
                  .Include(x => x.User)
                  .Include(x => x.Ingredients)
-                 .FirstOrDefaultAsync(x => x.Id == id);
+                 .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
             serviceResponse.Data = _mapper.Map<GetRecipeModel>(dbRecipe);
 
             return serviceResponse;
@@ -188,6 +189,7 @@ namespace ReceptiDeWebAPI.Services.Recipes
                 .Include(x => x.Category)
                 .Include(x => x.User)
                 .Include(x => x.Ingredients)
+                .Where(x => x.IsDeleted == false)
                 .ToListAsync();
 
             serviceResponse.Data = dbRecipes.Select(r => _mapper.Map<GetRecipeModel>(r)).ToList();

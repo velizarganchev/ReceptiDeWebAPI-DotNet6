@@ -18,10 +18,10 @@ namespace ReceptiDeWebAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<ServiceResponse<int>>> Register(UserRegisterModel request)
+        public async Task<ActionResult<ServiceResponse<int>>> Register(UserRegisterLoginModel request)
         {
             var response =
-                await _userService.Register(new User { Username = request.Username }, request.Password);
+                await _userService.Register(request);
             if (!response.Success)
             {
                 return BadRequest(response);
@@ -29,35 +29,27 @@ namespace ReceptiDeWebAPI.Controllers
             return Ok(response);
         }
 
-        //[HttpPost("login")]
-        //public ActionResult<string> Login(UserLoginModel request)
-        //{
-        //    var user = _userService.GetUser(request);
+        [HttpPost("login")]
+        public async Task<ActionResult<ServiceResponse<string>>> Login(UserRegisterLoginModel request)
+        {
+            var response = await _userService.Login(request);
 
-        //    if (user.Username != request.Username)
-        //    {
-        //        return BadRequest("User not found.");
-        //    }
+            if (!response.Success)
+            {
+                return BadRequest("User not found.");
+            }
+            var refreshToken = _userService.GenerateRefreshToken();
 
-        //    //if (!_userService.VerifyPassword(request, user))
-        //    //{
-        //    //    return BadRequest("Wrong password.");
-        //    //}
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = refreshToken.Expires
+            };
+            Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOptions);
 
-        //    string token = _userService.CreateToken(user);
+            _userService.SetRefreshToken(_userService.GetUser(request.Email), refreshToken);
 
-        //    var refreshToken = _userService.GenerateRefreshToken();
-
-        //    var cookieOptions = new CookieOptions
-        //    {
-        //        HttpOnly = true,
-        //        Expires = refreshToken.Expires
-        //    };
-        //    Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOptions);
-
-        //    _userService.SetRefreshToken(user, refreshToken);
-
-        //    return Ok(token);
-        //}
+            return Ok(response.Data);
+        }
     }
 }
